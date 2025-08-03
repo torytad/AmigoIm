@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Juego de Atrapadas AR</title>
+<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+<script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.7.6/aframe/build/aframe-ar.js"></script>
+<style>
+     body { margin: 0; overflow: hidden; }
+     #dialogo {
+       position: absolute;
+       top: 70px;
+       left: 50%;
+       transform: translateX(-50%);
+       background: white;
+       border: 2px solid #333;
+       border-radius: 12px;
+       padding: 10px 20px;
+       font-size: 18px;
+       display: none;
+       z-index: 2;
+     }
+     #puntos {
+       position: absolute;
+       top: 20px;
+       left: 50%;
+       transform: translateX(-50%);
+       background: #4caf50;
+       color: white;
+       padding: 8px 16px;
+       border-radius: 10px;
+       font-size: 20px;
+       z-index: 2;
+     }
+</style>
+</head>
+<body>
+<a-scene embedded arjs>
+<!-- Cámara -->
+<a-marker preset="hiro">
+<!-- Osito -->
+<a-entity id="amigo"
+         gltf-model="https://cdn.glitch.global/6df83e7d-646f-455f-a24a-5c49f787a4bc/cute_bear.glb?v=1"
+         scale="0.3 0.3 0.3"
+         position="0 0 0">
+</a-entity>
+</a-marker>
+<a-entity camera></a-entity>
+</a-scene>
+<!-- Interfaz -->
+<div id="puntos">Puntos: 0</div>
+<div id="dialogo">¡Atrápame si puedes! 🐻</div>
+<!-- Sonidos -->
+<audio id="musica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d57a2a9a83.mp3?filename=kids-music-113338.mp3" loop autoplay></audio>
+<audio id="sonidoAtrapado" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_b7c2cc58a5.mp3?filename=success-kids-113339.mp3"></audio>
+<audio id="sonidoEscapar" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_88c301d85d.mp3?filename=funny-hop-113337.mp3"></audio>
+<script>
+     const amigo = document.querySelector('#amigo');
+     const dialogo = document.getElementById('dialogo');
+     const puntosDisplay = document.getElementById('puntos');
+     const musica = document.getElementById('musica');
+     const sonidoAtrapado = document.getElementById('sonidoAtrapado');
+     const sonidoEscapar = document.getElementById('sonidoEscapar');
+     let puntos = 0;
+     let velocidad = 3000; // ms entre movimientos
+     let intervalo;
+     const frasesGanar = [
+       "¡Me atrapaste! 🎉",
+       "¡Eres muy rápido! ⚡",
+       "¡Ganaste esta vez! 🏆",
+       "¡Wow, qué velocidad! 🚀",
+       "¡Eres un campeón! 🐻"
+     ];
+     const frasesEscapar = [
+       "¡Atrápame si puedes! 🏃‍♂️",
+       "¡Soy más rápido que tú! 😜",
+       "¡Casi me atrapas! 😅",
+       "¡Sigo corriendo! 🐾",
+       "¡No me alcanzarás! 😏"
+     ];
+     // Reproducir música de fondo
+     musica.volume = 0.4;
+     musica.play().catch(() => {
+       console.log("El usuario debe interactuar antes de reproducir música.");
+     });
+     // Movimiento automático del osito
+     function moverOsito() {
+       const x = (Math.random() - 0.5) * 2;
+       const z = (Math.random() - 0.5) * 2;
+       amigo.setAttribute('animation__escapar', {
+         property: 'position',
+         to: `${x} 0 ${z}`,
+         dur: 1200,
+         easing: 'easeInOutQuad'
+       });
+       // Frase de escape + sonido
+       const frase = frasesEscapar[Math.floor(Math.random() * frasesEscapar.length)];
+       dialogo.innerText = frase;
+       dialogo.style.display = 'block';
+       sonidoEscapar.play();
+       setTimeout(() => { dialogo.style.display = 'none'; }, 2000);
+     }
+     // Iniciar juego
+     function iniciarJuego() {
+       intervalo = setInterval(() => {
+         moverOsito();
+       }, velocidad);
+     }
+     iniciarJuego();
+     // Al atrapar al osito
+     amigo.addEventListener('click', () => {
+       puntos++;
+       puntosDisplay.innerText = "Puntos: " + puntos;
+       // Mensaje + sonido de victoria
+       const frase = frasesGanar[Math.floor(Math.random() * frasesGanar.length)];
+       dialogo.innerText = frase;
+       dialogo.style.display = 'block';
+       sonidoAtrapado.play();
+       setTimeout(() => { dialogo.style.display = 'none'; }, 2000);
+       // Subir dificultad cada 5 puntos
+       if (puntos % 5 === 0 && velocidad > 1000) {
+         velocidad -= 500;
+         clearInterval(intervalo);
+         iniciarJuego();
+       }
+     });
+</script>
+</body>
+</html>
